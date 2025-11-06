@@ -6,7 +6,7 @@ from torch.optim import AdamW,SGD
 from torch.utils.data import DataLoader
 import pandas as pd
 
-from BERTdataset import BERTDataset
+from BERTdataset import BERTDataset,custom_collate
 from BERTmodel import BERTpretrain, BERT
 from BERToptim import ScheduledOptim
 from BERToptim import CosineAnnealingOptim
@@ -117,6 +117,8 @@ class BERTTrainer:
                 if isinstance(value, torch.Tensor):
                     data[key]=value.to(self.device)
             img_paths=data["img_paths"]
+            #print("+++++++++")
+            #print(img_paths)
             img_paths_list.append(img_paths)
 
             # 1. get bert embeddings
@@ -242,15 +244,14 @@ class BERTTrainer:
 
 
 if __name__ == "__main__":
-    pretrain_model_path = "/home/ubuntu/Documents/2025_smplx/smplify-x/output_0807_2/bert_trained.model.ep1010.pth"
-    #bert_pretrain="/home/ubuntu/Documents/2025_smplx/smplify-x/output_0731/bert_trained.model.ep5000.pth"
-    train_fn_dir = "/home/ubuntu/Documents/data/smplx_multisimo/train_0806"
-    test_fn_dir= "/home/ubuntu/Documents/data/smplx_multisimo/val_0806"
+    pretrain_model_path = None
+    train_fn_dir = "data/multisimo/train"
+    test_fn_dir= "data/multisimo/val"
 
-    output_dir="/home/ubuntu/Documents/2025_smplx/smplify-x/output_0807_4"
+    output_dir="output/pretrain"
     os.makedirs(output_dir,exist_ok=True)
-    output_path="/home/ubuntu/Documents/2025_smplx/smplify-x/output_0807_4/bert_trained.model"
-    plt_save_path = "/home/ubuntu/Documents/2025_smplx/smplify-x/output_0807_4/loss.png"
+    output_path="output/pretrain/bert_trained.model"
+    plt_save_path = "output/pretrain/loss.png"
     seq_len=32 # should be multiples of n_frame_per_file
     n_frame_per_file=16
     batch_size=64
@@ -265,7 +266,7 @@ if __name__ == "__main__":
     bert_beta=0.05
     bert_gamma=2.0
 
-    epochs=5010
+    epochs=6010
     log_freq=10
     save_freq=100
     lr=1e-6
@@ -283,23 +284,13 @@ if __name__ == "__main__":
         if test_fn_dir is not None else None
 
     print("Creating Dataloader")
-    train_data_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers,shuffle=True)
-    test_data_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=num_workers,shuffle=True) \
+    train_data_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers,shuffle=True,collate_fn=custom_collate)
+    test_data_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=num_workers,shuffle=True,collate_fn=custom_collate) \
         if test_dataset is not None else None
 
     print("Building BERT model")
     bert = BERT(pose_embed_size, hidden=hidden, n_layers=n_layers, attn_heads=attn_heads,dropout=0.1)
-    """
-    if bert_pretrain is not None:
-        state_dict = torch.load(bert_pretrain)
-        new_state_dict = {}
-        for key, value in state_dict.items():
-            if key.startswith("bert"):
-                new_key=key[5:]
-                #print(new_key)
-                new_state_dict[new_key] = value
-        bert.load_state_dict(new_state_dict)
-    """
+
     print("Creating BERT Trainer")
     trainer = BERTTrainer(bert, pose_embed_size, pose_mask_size,train_dataloader=train_data_loader, test_dataloader=test_data_loader,
                           bert_alpha=bert_alpha, bert_beta=bert_beta,bert_gamma=bert_gamma,

@@ -4,22 +4,22 @@ import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
 
-from BERTdataset import BERTDataset
+from BERTdataset import BERTDataset, custom_collate
 from BERTmodel import BERT
 from GesGroupTrainer import GesGroupTrainer, save_loss_plot
 
 
 if __name__ == "__main__":
-    bert_pretrain=None#"/home/ubuntu/Documents/2025_smplx/smplify-x/output_0807_4/bert_trained.model.ep5000.pth"
-    ges_pretrain="/home/ubuntu/Documents/2025_smplx/smplify-x/output_0808_ges_1/gesGroup.model.ep500.pth"
-    train_fn_dir = "/home/ubuntu/Documents/data/smplx_multisimo/train_0808"
-    test_fn_dir="/home/ubuntu/Documents/data/smplx_multisimo/val_0808"
-    eval_dir = "/home/ubuntu/Documents/data/smplx_multisimo/train_0808"
+    bert_pretrain="models/bert_trained.model.ep6000.pth"
+    ges_pretrain=None
+    train_fn_dir = "data/multisimo/train"
+    test_fn_dir= "data/multisimo/val"
+    eval_dir = "data/multisimo/train"
 
-    output_dir= "/home/ubuntu/Documents/2025_smplx/smplify-x/output_0808_ges_eval_train"
+    output_dir= "output/finetune"
     os.makedirs(output_dir,exist_ok=True)
-    output_path= "/home/ubuntu/Documents/2025_smplx/smplify-x/output_0808_ges_1/gesGroup.model"
-    plt_save_path = "/home/ubuntu/Documents/2025_smplx/smplify-x/output_0808_ges_1/loss.png"
+    output_path= "output/finetune/gesGroup.model"
+    plt_save_path = "output/finetune/loss.png"
     seq_len=32 # should be multiples of n_frame_per_file
     n_frame_per_file=16
     batch_size=128
@@ -52,8 +52,8 @@ if __name__ == "__main__":
         if test_fn_dir is not None else None
 
     print("Creating Dataloader")
-    train_data_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers,shuffle=True)
-    test_data_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=num_workers) \
+    train_data_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers,shuffle=True,collate_fn=custom_collate)
+    test_data_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=num_workers,collate_fn=custom_collate) \
         if test_dataset is not None else None
 
     print("Building BERT model")
@@ -79,7 +79,7 @@ if __name__ == "__main__":
                           warmup_steps=warmup_steps,init_lr_scale=init_lr_scale,num_epochs=epochs,
                           with_cuda=True, log_freq=log_freq,pretrain_model=ges_pretrain)
 
-    """
+
     print("Training Start")
     train_loss_list=[]
     test_loss_list=[]
@@ -110,11 +110,11 @@ if __name__ == "__main__":
         f.write(title + '\n')  # Write title
         df.to_csv(f)
     print("Final training statistics saved")
-    """
+
     print("Final evaluation...")
     print(f"Loading eval Dataset: {eval_dir}")
     eval_dataset = BERTDataset(eval_dir, seq_len=seq_len, n_frame_file=n_frame_per_file)
-    eval_dataloader = DataLoader(eval_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
+    eval_dataloader = DataLoader(eval_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False,collate_fn=custom_collate)
     trainer.evaluate_and_plot(eval_dataloader, save_dir=output_dir)
     print("Final evaluation done")
     print("-----GesGroupModel Successfully trained---------------")

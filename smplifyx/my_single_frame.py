@@ -14,7 +14,7 @@ from prior import create_prior
 
 def get_joints(result,body_pose):
     smplx_model = smplx.SMPLX(
-        model_path="/home/ubuntu/Documents/2025_smplx/smplify-x/models/smplx",
+        model_path="models/smplx",
         gender='neutral',  # can be 'male' or 'female' or 'neutral'
         num_betas=10,
         use_pca=True,
@@ -46,11 +46,11 @@ def get_joints(result,body_pose):
 
 
 def prepare_model():
-    args = parse_config(["--config", "/home/ubuntu/Documents/2025_smplx/smplify-x/cfg_files/fit_smplx.yaml",
+    args = parse_config(["--config", "cfg_files/fit_smplx.yaml",
                          '--visualize="False"',
-                         "--model_folder", "/home/ubuntu/Documents/2025_smplx/smplify-x/models",
-                         "--vposer_ckpt", "/home/ubuntu/Documents/2025_smplx/smplify-x/vposer/vposer_v2_05",
-                         "--part_segm_fn", "/home/ubuntu/Documents/2025_smplx/smplify-x/smplx_parts_segm.pkl"
+                         "--model_folder", "models",
+                         "--vposer_ckpt", "models/vposer/vposer_v2_05",
+                         "--part_segm_fn", "models/smplx_parts_segm.pkl"
                          ])
     # check env
     float_dtype = args.get('float_dtype', 'float32')

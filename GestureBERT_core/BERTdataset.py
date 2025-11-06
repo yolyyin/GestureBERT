@@ -1,8 +1,9 @@
 import os
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, default_collate
 import pickle
 import torch
 import random
+
 from utils import smpl_to_openpose,openpose_to_smpl
 
 VALID_JOINTS=list(range(22))+list(range(25,55))+list(range(66,76)) # smplx body and hand joints
@@ -11,6 +12,23 @@ MASK_IDX= 2.0
 UNK_IDX = -2.0
 SOS_IDX=3.0
 
+
+def custom_collate(batch):
+    out = {}
+    # assume all dicts have the same keys
+    keys = batch[0].keys()
+
+    for k in keys:
+        if k == "img_paths":
+            # Collect python objects, do NOT collate to tensor
+            paths = [sample["img_paths"] for sample in batch]
+            # Keep previous behavior for batch_size==1
+            out["img_paths"] = paths[0] if len(paths) == 1 else paths
+        else:
+            # Use PyTorch's default collation (stacks tensors, etc.)
+            out[k] = default_collate([sample[k] for sample in batch])
+
+    return out
 
 
 class BERTDataset(Dataset):

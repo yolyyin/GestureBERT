@@ -5,7 +5,7 @@ from PIL import Image
 import torch
 from torch.utils.data import DataLoader
 
-from BERTdataset import BERTDataset
+from BERTdataset import BERTDataset,custom_collate
 from BERTmodel import BERTpretrain, BERT
 from BERTtrainer import BERTTrainer
 
@@ -18,14 +18,14 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
 
 if __name__ == "__main__":
-    pretrain_model_path = "/home/ubuntu/Documents/2025_smplx/smplify-x/output_0807_4/bert_trained.model.ep1500.pth"
-    #pretrain_model_path = "/home/ubuntu/Documents/2025_smplx/smplify-x/output_0808_ges_1/gesGroup.model.ep500.pth"
-    data_dir = "/home/ubuntu/Documents/data/smplx_multisimo/new_smplx_poses"
-    cache_dir="/home/ubuntu/Documents/data/smplx_multisimo/new_caches"
-    output_dir="/home/ubuntu/Documents/2025_smplx/smplify-x/output_0811_cluster_pretrain(DBSCAN)"
+    pretrain_model_path = "models/bert_trained.model.ep2500.pth"
+    #pretrain_model_path = "models/gesGroup.model.ep500.pth"
+    data_dir = "data/multisimo/smplx_poses"
+    cache_dir="data/multisimo/caches"
+    output_dir="output/embed_cluster"
     os.makedirs(output_dir,exist_ok=True)
     train_kw="after pre-training"
-    cluster_kw="DBSCAN"
+    cluster_kw="KMEANS"
     n_key_frames=4
 
     n_clusters=10
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     dataset = BERTDataset(data_dir, seq_len=seq_len,n_frame_file=n_frame_per_file,full_seq=False)
 
     print("Creating Dataloader")
-    data_loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers,shuffle=False)
+    data_loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers,shuffle=False,collate_fn=custom_collate)
 
     print("Building BERT model")
     bert = BERT(pose_embed_size, hidden=hidden, n_layers=n_layers, attn_heads=attn_heads)
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     clip_keyword_list = []
     start_end_list = []
     for img_paths in img_list:
-        fns=[fn[0] for fn in img_paths]
+        fns=img_paths
         clip_names = [os.path.basename(fn).split('.')[0] for fn in fns]
         frame_infos = [os.path.basename(fn).split('.')[1] for fn in fns]
         assert len(set(clip_names)) == 1, "Full sequence dataset shouldn't yield sequence from same video!"

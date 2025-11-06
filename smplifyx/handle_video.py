@@ -101,27 +101,27 @@ def clip_video_by_elan(video_path, eaf_path, tier_name, output_dir, buffer_secon
 
 
 if __name__=="__main__":
-    logging.basicConfig(
-        filename="/home/ubuntu/Documents/2025_smplx/smplify-x/output_0728/my_log.log",
-        level= logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'  # Log format
-    )
-    vit_model = HandEncoder(vit_pth_path='/home/ubuntu/Documents/2025_smplx/smplify-x/models/VitB16.pth').to('cuda')
-    yolo_model = YOLO("/home/ubuntu/Documents/2025_smplx/smplify-x/models/YOLOv10x_hands.pt").to('cuda')
-    with open('/home/ubuntu/Documents/data/smplx_multisimo/vit_pca.pkl', 'rb') as f:
+    #logging.basicConfig(
+    #    filename="/home/ubuntu/Documents/2025_smplx/smplify-x/output_0728/my_log.log",
+    #    level= logging.INFO,
+    #    format='%(asctime)s - %(levelname)s - %(message)s'  # Log format
+    #)
+    vit_model = HandEncoder(vit_pth_path='models/VitB16.pth').to('cuda')
+    yolo_model = YOLO("models/YOLOv10x_hands.pt").to('cuda')
+    with open('models/vit_pca.pkl', 'rb') as f:
         pca_model = pickle.load(f)
 
     n_frame_per_file=16
     FPS=30
     buffer_seconds=0
-    origin_video_dir="/home/ubuntu/Documents/data/smplx_multisimo/original_videos_2"
+    origin_video_dir="data/multisimo/original_videos"
     origin_video_names = [os.path.splitext(fn)[0] for fn in os.listdir(origin_video_dir)]
-    elan_anno_dir="/home/ubuntu/Documents/data/smplx_multisimo/eafs"
-    video_dir = "/home/ubuntu/Documents/data/smplx_multisimo/new_videos_2"
-    cache_dir = '/home/ubuntu/Documents/data/smplx_multisimo/new_caches_2'
-    out_folder = '/home/ubuntu/Documents/data/smplx_multisimo/new_smplx_poses'
-    #os.makedirs(video_dir,exist_ok=True)
-    #os.makedirs(cache_dir,exist_ok=True)
+    elan_anno_dir="data/multisimo/eafs"
+    video_dir = "data/multisimo/videos"
+    cache_dir = 'data/multisimo/caches'
+    out_folder = 'data/multisimo/smplx_poses'
+    os.makedirs(video_dir,exist_ok=True)
+    os.makedirs(cache_dir,exist_ok=True)
     os.makedirs(out_folder, exist_ok=True)
 
 
@@ -302,12 +302,12 @@ if __name__=="__main__":
             prev_camera_trans = result['camera_translation']
             prev_body_global_orient = result['global_orient']
             prev_betas=result['betas']
-            logging.info("********")
-            logging.info(f"img_name:{img_name}")
-            logging.info(f"camera_trans:{prev_camera_trans}")
-            logging.info(f"body_orient:{prev_body_global_orient}")
-            logging.info(f"body_betas:{prev_betas}")
-            logging.info(f"body_final_loss_val:{loss}")
+            #logging.info("********")
+            #logging.info(f"img_name:{img_name}")
+            #logging.info(f"camera_trans:{prev_camera_trans}")
+            #logging.info(f"body_orient:{prev_body_global_orient}")
+            #logging.info(f"body_betas:{prev_betas}")
+            #logging.info(f"body_final_loss_val:{loss}")
 
             joints = get_joints(result,body_pose)[0] #[127,3]
             print(f"\nJoints shape:{joints.shape}")
